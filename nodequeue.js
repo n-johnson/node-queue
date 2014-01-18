@@ -16,6 +16,7 @@
 var Queue = function(port, server) {
 	this.Database = require('./lib/database.js').init(port, server); //Initializes the database + expose as child
 	this.Job = require('./lib/job.js'); //Exposes Job as a child of Queue
+	this.Workers = require('./lib/workers.js').init(this);
 };
 
 Queue.prototype.JobType = {
@@ -46,22 +47,43 @@ Queue.prototype.getAllJobs = function(finalCallBack) {
 	return null;
 };
 
+
+/**
+ * [getAllJobsByStatus - Finds jobs of a given status]
+ * @param  {[string]} jobStatus     [DELAYED | QUEUED | etc]
+ * @param  {[boolean]} sort          [Sort jobs by priority]
+ * @param  {[function]} finalCallBack [function(data) - passes parameter data]
+ * @return {[none]}               
+ */
 Queue.prototype.getAllJobsByStatus = function(jobStatus, sort, finalCallBack) {
-	this.getAllJobsBy({
+	this._getAllJobsBy({
 		key: "jobs.status",
 		value: jobStatus
 	}, sort, finalCallBack);
 };
-
+/**
+ * [getAllJobsByName - Finds jobs of a given name]
+ * @param  {[type]} jobName       
+ * @param  {[boolean]} sort          [Sort jobs by priority]
+ * @param  {[function]} finalCallBack [function(data) - passes parameter data]
+ * @return {[none]}               
+ */
 Queue.prototype.getAllJobsByName = function(jobName, sort, finalCallBack) {
-	this.getAllJobsBy({
+	this._getAllJobsBy({
 		key: "jobs.name",
 		value: jobName
 	}, sort, finalCallBack);
 };
-
+/**
+ * [getAllJobsByStatusAndName - Finds jobs with both parameters matching]
+ * @param  {[string]} jobStatus     [DELAYED | QUEUED | etc]
+ * @param  {[type]} jobName       
+ * @param  {[boolean]} sort          [Sort jobs by priority]
+ * @param  {[function]} finalCallBack [function(data) - passes parameter data]
+ * @return {[none]}               
+ */
 Queue.prototype.getAllJobsByStatusAndName = function(jobStatus, jobName, sort, finalCallBack) {
-	this.getAllJobsByAnd({
+	this._getAllJobsByAnd({
 		key: "jobs.status",
 		value: jobStatus
 	}, {
@@ -70,7 +92,10 @@ Queue.prototype.getAllJobsByStatusAndName = function(jobStatus, jobName, sort, f
 	}, sort, finalCallBack);
 };
 
-Queue.prototype.getAllJobsBy = function(jobObj, sort, finalCallBack) {
+/**
+ * [_getAllJobsBy - Called by wrapper functions]
+ */
+Queue.prototype._getAllJobsBy = function(jobObj, sort, finalCallBack) {
 	var that = this;
 	if (sort) { //Return sorted by priority
 		that.Database.client.sort(jobObj.key + "." + jobObj.value, "by", "job:*->priority", "desc", function(err, data) {
@@ -94,8 +119,10 @@ Queue.prototype.getAllJobsBy = function(jobObj, sort, finalCallBack) {
 		});
 	}
 };
-
-Queue.prototype.getAllJobsByAnd = function(jobObj1, jobObj2, sort, finalCallBack) {
+/**
+ * [_getAllJobsByAnd - Called by wrapper functions]
+ */
+Queue.prototype._getAllJobsByAnd = function(jobObj1, jobObj2, sort, finalCallBack) {
 	var that = this;
 	if (sort) { //Return sorted by priority
 		that.Database.client.sinterstore("temp.ss", jobObj1.key + "." + jobObj1.value, jobObj2.key + "." + jobObj2.value, function(err, data) { // && data together
@@ -145,6 +172,7 @@ Queue.prototype.pushJob = function(job, cb) {
 				"priority": job.priority
 			}, function() { //Callback of hmset, add incr to jobs list
 				that.Database.client.rpush('jobs', id, function(err, res) { //Add id to jobs array
+					cb(err, res); //Callback
 				});
 
 				that.Database.client.sadd('jobs.status.' + job.status, id, function(err, res) { //Add status to type array

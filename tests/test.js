@@ -1,3 +1,11 @@
+/*!
+ * nodeQueue v0.0.1
+ * Author: Nathan Johnson <node@njohnson.me>
+ * License: MIT Licensed
+ *
+ * File: test.js
+ */
+
 var Queue = require('../nodequeue.js').init();
 //var Queue = require('./nodequeue.js').init(6379,'redisServer.com');
 
