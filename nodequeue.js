@@ -53,7 +53,7 @@ Queue.prototype.getAllJobs = function(finalCallBack) {
  * @param  {[string]} jobStatus     [DELAYED | QUEUED | etc]
  * @param  {[boolean]} sort          [Sort jobs by priority]
  * @param  {[function]} finalCallBack [function(data) - passes parameter data]
- * @return {[none]}               
+ * @return {[none]}
  */
 Queue.prototype.getAllJobsByStatus = function(jobStatus, sort, finalCallBack) {
 	this._getAllJobsBy({
@@ -63,10 +63,10 @@ Queue.prototype.getAllJobsByStatus = function(jobStatus, sort, finalCallBack) {
 };
 /**
  * [getAllJobsByName - Finds jobs of a given name]
- * @param  {[type]} jobName       
+ * @param  {[type]} jobName
  * @param  {[boolean]} sort          [Sort jobs by priority]
  * @param  {[function]} finalCallBack [function(data) - passes parameter data]
- * @return {[none]}               
+ * @return {[none]}
  */
 Queue.prototype.getAllJobsByName = function(jobName, sort, finalCallBack) {
 	this._getAllJobsBy({
@@ -77,10 +77,10 @@ Queue.prototype.getAllJobsByName = function(jobName, sort, finalCallBack) {
 /**
  * [getAllJobsByStatusAndName - Finds jobs with both parameters matching]
  * @param  {[string]} jobStatus     [DELAYED | QUEUED | etc]
- * @param  {[type]} jobName       
+ * @param  {[type]} jobName
  * @param  {[boolean]} sort          [Sort jobs by priority]
  * @param  {[function]} finalCallBack [function(data) - passes parameter data]
- * @return {[none]}               
+ * @return {[none]}
  */
 Queue.prototype.getAllJobsByStatusAndName = function(jobStatus, jobName, sort, finalCallBack) {
 	this._getAllJobsByAnd({
@@ -149,8 +149,47 @@ Queue.prototype._getAllJobsByAnd = function(jobObj1, jobObj2, sort, finalCallBac
 	}
 };
 
+Queue.prototype.setStatusDoneRunning = function(job, cb) {
+	var that = this;
+	that.Database.client.srem('jobs.status.' + that.JobType.running, job.id, function(err, res) {
+		cb();
+	});
+};
 
-
+Queue.prototype.updateJobStatus = function(job, newStatus, cb) {
+	console.log("lets update job status");
+	var that = this;
+	if (job.status !== newStatus) { //Make sure the status is actually different before we do anything
+		console.log("new status verifited");
+		that.Database.client.hmset('job:' + job.id, {
+				"status": newStatus
+			},
+			function(err, res) {
+				if (err === null) { // No error in update
+					that.Database.client.srem('jobs.status.' + job.status, job.id, function(err, res) { // Remove job from old status array
+						if (err === null) {
+							that.Database.client.sadd('jobs.status.' + newStatus, job.id, function(err, res) { //Add id to new job status array
+								if (err === null) {
+									cb(); //Callback function
+								} else {
+									console.log('Error: ' + err);
+									console.log('Error in sadd');
+								}
+							});
+						} else {
+							console.log('Error: ' + err);
+							console.log('Error in srem');
+						}
+					});
+				} else {
+					console.log('Error: ' + err);
+					console.log('Error in hmset');
+				}
+			});
+	} else { // the status was unchanged, execute callback immediatley.
+		return cb();
+	}
+};
 /**
  * [pushJob - Pushes given job into the queue]
  * @param  {[Job]}   job [job set for the queue]
@@ -172,11 +211,11 @@ Queue.prototype.pushJob = function(job, cb) {
 				"priority": job.priority
 			}, function() { //Callback of hmset, add incr to jobs list
 				that.Database.client.rpush('jobs', id, function(err, res) { //Add id to jobs array
-					cb(err, res); //Callback
+					//cb(err, res); //Callback
 				});
 
 				that.Database.client.sadd('jobs.status.' + job.status, id, function(err, res) { //Add status to type array
-					cb(err, res); //Callback
+					//cb(err, res); //Callback
 				});
 
 				that.Database.client.sadd('jobs.name.' + job.name, id, function(err, res) { //Add status to type array

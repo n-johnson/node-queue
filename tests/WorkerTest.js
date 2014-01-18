@@ -22,21 +22,24 @@ var Queue = require('../nodequeue.js').init();
  * Status option:
  * 1. COMPLETE
  * 2. FAILED
- *  
+ *
  */
 
-var lookupUserFunc = function(Job,callBack) {
+var lookupUserFunc = function(Job, callBack) {
 	console.log("lookupUserFunc being ran by worker");
 	console.log(Job);
-
-	callBack(Job,'COMPLETE');
+	var now = Date.now();
+	while (Date.now() < now + 5000) {
+		//Sleep hack to observe working state like it would function in working conditions
+	}
+	callBack(Job, Queue.JobType.complete);
 };
 
-var secondFunc = function(Job,callBack) {
+var secondFunc = function(Job, callBack) {
 	console.log("secondFunction being ran by worker");
 	console.log(Job);
 
-	callBack(Job,'FAILED');
+	callBack(Job, Queue.JobType.failed);
 };
 
 /**
@@ -47,13 +50,19 @@ var WorkerFunctions = {
 	"genStats": lookupUserFunc,
 	"userAdd": lookupUserFunc,
 	"userDel": lookupUserFunc,
-	"sendEmail":lookupUserFunc
+	"sendEmail": lookupUserFunc
 };
 
-//Start the workers!
-var options = {refreshInterval: 500};
-Queue.Workers.start(WorkerFunctions,options);
 
-setTimeout(function() {
-	process.exit(code=0);
-},4000);
+exports.runTests = function(runTime, cb) {
+	//Start the workers!
+	var options = {
+		refreshInterval: 500
+	};
+	Queue.Workers.start(WorkerFunctions, options);
+
+	setTimeout(function() {
+		Queue.Workers.stop();
+		return cb();
+	}, runTime * 1000);
+};
