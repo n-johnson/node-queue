@@ -62,16 +62,12 @@ var Queue = require('nodequeue').init();
  */
 
 var testFunction = function(Job, callBack) {
-
 	// Execute job code here
-
 	callBack(Job, Queue.JobType.complete); //Job was completed, send back COMPLETE
 };
 
 var testFunction2 = function(Job, callBack) {
-	
 	// Execute job code here
-
 	callBack(Job, Queue.JobType.failed); // Job did not complete, send back FAILED
 };
 
