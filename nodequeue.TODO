@@ -1,0 +1,33 @@
+################
+ nodeQueue.TODO
+################
+
+No particular order.
+
+1.) Integrate unit testing via a library perhaps
+2.) Cleanup console.logs()
+3.) Standardize callbacks
+	a.) Are we correctly implementing them, errors and what not?
+4.) More robust testing in a clustered setting
+	a.) Ensure jobs aren't being processed multiple times [proper locking]
+5.) Integrate into redditSNOOP and use that to gage what functionality is left
+6.) Create a web interface with express to visualize the queue
+7.) Cleanup the redis abstraction, anything touching the database must go through database.js to make it possible to port to alternative KV store
+8.) Ensure we are setup as a proper module -> file/dir structure
+9.) Add project to npm
+10.) Documentation
+	a.) Installation
+	b.) Features
+	c.) API
+11.) Cleanup unused functions
+	a.) Namely the getAllJobsBy.... that we don't use
+12.) In Queue.pushJob(), we are concurrently adding the job to jobs, jobs.status, and jobs.name, and just issuing the callback on the final one. This portion of the code can be wrapped in a Database.client.multi() -> multi.hmset, multi.rpush, finally multi.exec(callBackFunction)
+	a.) http://stackoverflow.com/questions/21056937/proper-placement-of-callback-with-multiple-async-redis-calls-in-node-js
+
+##########
+ Bug List
+##########
+
+1.) Job Queue Ordering
+	a.) It does order by priority correctly, but among jobs of the same priority, it should run the oldest job first
+		i.) Currently it does the reverse (though I have a note saying it is random) -- NEEDS TESTING
