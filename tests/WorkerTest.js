@@ -7,7 +7,7 @@
  */
 
 //Load main application
-var Queue = require('../nodequeue.js').init();
+var Queue = require('../nodequeue').init();
 
 /**
  * Define the functions your workers run here

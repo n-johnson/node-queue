@@ -7,8 +7,8 @@
  *       - Run this file to perform application tests.
  */
 
-var JobCreation = require('./JobCreationTests.js');
-var WorkerTests = require('./WorkerTest.js');
+var JobCreation = require('./JobCreationTests');
+var WorkerTests = require('./WorkerTest');
 
 JobCreation.runTests(30, function() { //Number of jobs to add to queue
 	WorkerTests.runTests(10, function() { //Number of seconds to process for
