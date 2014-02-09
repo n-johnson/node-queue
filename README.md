@@ -22,27 +22,27 @@ or if the database isn't on the same server/a custom port is used:
 var Queue = require('nodequeue').init(customPort,'redisServer.com');
 ```
 ###Job Creation
+Jobs are very easy to create, simply build the object and pass it to Queue.pushJob(). The options are explained below.
 
 ``` js
-	var jobData = {
-		name: jobName, // Unique identifier for a given class of jobs: determines which function will be used by worker
-		status: QUEUED, //QUEUED: normal | DELAYED: set job execution at some time in the future
-		payload: { //Any information you will need to process the job, can be any type of data, string or object
-			customInfo1: 'abc',
-			customInfo2: '123'},
-		priority: 10, //Jobs are processed from highest priority to lowest regardless of when they are added
-		delay: 15000 //(OPTIONAL) - If status is set to 'DELAYED', this is the number of milliseconds the job will be delayed by
-	};
+var jobData = {
+	name: jobName, // Unique identifier for a given class of jobs: determines which function will be used by worker
+	status: 'QUEUED', //QUEUED: normal | DELAYED: set job execution at some time in the future
+	payload: { //Any information you will need to process the job, can be any type of data, string or object
+		customInfo1: 'abc',
+		customInfo2: '123'},
+	priority: 10, //Jobs are processed from highest priority to lowest regardless of when they are added
+	delay: 15000 //(OPTIONAL) - If status is set to 'DELAYED', this is the number of milliseconds the job will be delayed by
+};
 
-	var job = new Queue.Job(jobData);
+var job = new Queue.Job(jobData);
 
-	Queue.pushJob(job, function() {
-		//Optional callback function
-	});
+Queue.pushJob(job, function() {
+	//Optional callback function
+});
 ```
 
 ###Workers
-
 nodeQueue is very flexible in its workers, you can have as many or as few as you would like, located on any number of servers, as long as they are able to access the database which holds the job information.
 
 Here is basic example of how the worker process should be setup:
