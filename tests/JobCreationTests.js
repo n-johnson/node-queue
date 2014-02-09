@@ -38,12 +38,17 @@ function getRandomText(numberOfCharactersLow, numberOfCharactersHigh) {
 function generateRandomJobArray(numberOfJobs) {
 	var jobArray = [];
 	for (var i = 0; i < numberOfJobs; i++) {
-		var j = new Queue.Job({
+		var jData = {
 			name: getRandomName(),
 			status: getRandomJobType(),
 			payload: getRandomText(3, 50),
 			priority: getRandomInt(0, 30)
-		});
+		};
+		if(jData.status == Queue.JobType.delayed) {
+			jData.delay = getRandomInt(15000,1000*60*30);
+		}
+		var j = new Queue.Job(jData);
+		console.log(j);
 		jobArray[i] = j;
 	}
 	return jobArray;

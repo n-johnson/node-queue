@@ -203,13 +203,21 @@ Queue.prototype.pushJob = function(job, cb) {
 	var that = this;
 	cb = cb || function(err, res) {};
 	if (job.name) {
-		that.Database.incr("id:jobs", function(id) { //Increment redis variable id:jobs
-			that.Database.client.hmset('job:' + id, { //Callback of incr, set the hash of job:incr
+		that.Database.incr("id:jobs", function(id) { //Increment redis variable id:jobs  
+			//Callback of incr, set the hash of job:incr
+			var jobDataArray = {
 				"name": job.name,
 				"status": job.status,
 				"payload": job.payload,
 				"priority": job.priority
-			}, function() { //Callback of hmset, add incr to jobs list
+			};
+			if(typeof job.delay !== 'undefined') {
+				jobDataArray.delay = job.delay;
+			}
+			if(typeof job._startTime !== 'undefined') {
+				jobDataArray._startTime = job._startTime;
+			}
+			that.Database.client.hmset('job:' + id, jobDataArray, function() { //Callback of hmset, add incr to jobs list
 				that.Database.client.rpush('jobs', id, function(err, res) { //Add id to jobs array
 					//cb(err, res); //Callback
 				});

@@ -29,9 +29,9 @@ var lookupUserFunc = function(Job, callBack) {
 	console.log("lookupUserFunc being ran by worker");
 	console.log(Job);
 	var now = Date.now();
-	while (Date.now() < now + 5000) {
+/*	while (Date.now() < now + 5000) {
 		//Sleep hack to observe working state like it would function in working conditions
-	}
+	}*/
 	callBack(Job, Queue.JobType.complete);
 };
 
